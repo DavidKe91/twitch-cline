@@ -1,9 +1,69 @@
-import React from 'react';
+import React, { Component } from 'react';
+import { Link } from 'react-router-dom';
 
-const StreamList = () => {
-    return (
-        <div>StreamList</div>
-    );
-}
+import { fetchStreams } from '../../actions';
+import { connect } from 'react-redux';
 
-export default StreamList;
+class StreamList extends Component {
+    componentDidMount() {
+        this.props.fetchStreams();
+    }
+
+    renderAdmin(stream) {
+        if (stream.userId === this.props.currentUserId) {
+            return (
+                <div className='right floated content'>
+                    <Link className='ui button primary' to={`/streams/edit/${stream.id}`}>Edit</Link>
+                    <button className='ui button negative'>Delete</button>
+                </div>
+            );
+        }
+    }
+
+    renderList() {
+        return this.props.streams.map(stream => {
+            return (
+                <div className='item' key={stream.id}>
+                    {this.renderAdmin(stream)}
+                    <i className='large middle aligned icon camera' />
+                    <div className='content'>
+                        {stream.title}
+                        <div className="description">
+                            {stream.description}
+                        </div>
+                    </div>
+                </div>
+            )
+        });
+    }
+
+    renderCreate() {
+        if (this.props.isSignedIn) {
+            return (
+                <div style={{ textAlign: 'right' }}>
+                    <Link to='/streams/new' className='ui button primary'>Create Stream</Link>
+                </div>
+            )
+        }
+    }
+
+    render() {
+        return (
+            <div>
+                <h2>Streams</h2>
+                <div className='ui celled list'>{this.renderList()}</div>
+                {this.renderCreate()}
+            </div>
+        );
+    };
+};
+
+const mapStateToProps = (state) => {
+    return {
+        currentUserId: state.auth.userId,
+        streams: Object.values(state.streams),
+        isSignedIn: state.auth.isSignedIn
+    }
+};
+
+export default connect(mapStateToProps, { fetchStreams })(StreamList);
